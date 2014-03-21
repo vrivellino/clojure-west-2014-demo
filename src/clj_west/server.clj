@@ -4,8 +4,8 @@
             [compojure.core :refer :all]
             [compojure.route :as route]
             ring.middleware.params
-            ring.middleware.keyword-params
-            [datomic.api :as d]))
+            [datomic.api :as d]
+            [clj-west.messages :as m]))
 
 (def ^:dynamic *app-context*
   nil)
@@ -16,13 +16,13 @@
 
 (defn- write-endpoint
   [request]
-  ;; TODO: Add actual handler transaction logic
-  )
+  (log/info request)
+  (str (m/transact (datomic-conn) request)))
 
 (defn- read-endpoint
   [request]
-  ;; TODO: Add actual handler transaction logic
-  )
+  (let [db (d/db (datomic-conn))]
+    (str (m/query db :clj-west.messages/id (:id (:params request))))))
 
 (defroutes ^:private app-routes
   (GET "/write" request (write-endpoint request))
@@ -30,6 +30,7 @@
 
 (defn- dynamic-app-context
   [handler options]
+  (log/info "Dynamic App Context")
   (if (:dynamic? options)
     (fn [request]
       (binding [*app-context* options]
@@ -39,12 +40,12 @@
 (defn- wrap-db-uri
   [handler]
   (fn [request]
+    (log/info "Wrap DB URI HANDLER")
     (handler (assoc request :clj-west/ddb-uri (-> *app-context* :ddb-peer :uri)))))
 
 (defn app
   [options]
   (-> app-routes
-      ring.middleware.keyword-params/wrap-keyword-params
       ring.middleware.params/wrap-params
       wrap-db-uri
       (dynamic-app-context options)))

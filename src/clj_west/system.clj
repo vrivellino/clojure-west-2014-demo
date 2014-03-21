@@ -11,8 +11,7 @@
 
 (defn init-servlet
   []
-  (let [ddb-peer (clj-west.datomic/persistent-peer (-> (clj-west.config/get-datomic-config)
-                                                       :datomic-uri))]
+  (let [ddb-peer (clj-west.datomic/persistent-peer (clj-west.config/get-datomic-config :datomic-uri))]
     @(start ddb-peer)
     (alter-var-root #'clj-west.server/*app-context*
                     (constantly {:ddb-peer ddb-peer}))))

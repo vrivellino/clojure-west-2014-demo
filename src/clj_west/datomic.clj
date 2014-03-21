@@ -8,7 +8,15 @@
             [clj-west.lifecycle :refer (Lifecycle)])
   (:import [clojure.lang ExceptionInfo]
            [java.util.concurrent Executors TimeUnit ScheduledExecutorService]
-           [org.joda.time LocalTime]))
+           [org.joda.time LocalTime]
+           [java.security MessageDigest]))
+
+(defn digest
+  [s]
+  (let [hash (MessageDigest/getInstance "SHA-256")]
+    (.update hash (.getBytes s))
+    (let [digest (.digest hash)]
+      (apply str (map #(format "%02x" (bit-and % 0xff)) digest)))))
 
 (defn- schema-present?
   [db id]
@@ -26,7 +34,7 @@
     (doseq [tx schema]
       @(d/transact conn
                    (if inst (conj tx inst-assertion) tx)))
-    (let [schema-assertion {:db/id (d/tempid :clj-west.part/schema)
+    (let [schema-assertion {:db/id (d/tempid :clj-west.part/schemas)
                             :clj-west.schema/transacted-schema-id schema-id}]
       @(d/transact conn
                    (if inst
@@ -37,8 +45,8 @@
   ([conn] (ensure-schema conn nil))
   ([conn inst]
      (let [schema-str (binding [*read-eval* false]
-                        (slurp (io/resource "clj-west/schema.edn")))
-           schema-id (str (com/digest schema-str))]
+                        (slurp (io/resource "schema.edn")))
+           schema-id (str (digest schema-str))]
        (if (schema-present? (d/db conn) schema-id)
          (log/info "Schema"
                    schema-id
@@ -46,7 +54,7 @@
          (do
            (log/info "Asserting schema" schema-id)
            (transact-schema conn
-                           (-> schemas-str read-string)
+                           (-> schema-str read-string)
                            schema-id
                            inst))))))
 

@@ -1,1 +1,48 @@
-;; TODO: Add simple schema layout here
+[
+ [{:db/ident :user/attr
+   :db/doc "Helper fn for creating attributes. type is a bare keyword like :ref,
+            :instant, or :string. options is a map of standard Datomic schema
+            attributes to be merged in with defaults (cardinality one, indexed
+            false)."
+   :db/id #db/id[:db.part/db]
+   :db/fn #db/fn{:lang :clojure
+                 :params [db ident type options docstring]
+                 :code
+                 [(merge
+                   {:db/id (datomic.api/tempid :db.part/db)
+                    :db/doc docstring
+                    :db/ident ident
+                    :db/valueType (keyword "db.type" (name type))
+                    :db/cardinality :db.cardinality/one
+                    :db.install/_attribute :db.part/db}
+                   options)]}}
+
+  {:db/ident :user/part
+   :db/doc "Helper fn for creating partitions."
+   :db/id #db/id[:db.part/db]
+   :db/fn #db/fn{:lang :clojure
+                 :params [db ident docstring]
+                 :code
+                 [{:db/ident ident
+                   :db/doc docstring
+                   :db/id (datomic.api/tempid :db.part/db)
+                   :db.install/_partition :db.part/db}]}}]
+
+ [[:user/part :clj-west.part/schemas
+   "Partition for assertions about which schemas are present."]
+
+  [:user/attr :clj-west.schema/transacted-schema-id :string
+   {:db/unique :db.unique/identity}
+   "A unique identifier for a particular version of a particular
+   schema. Presence of this datom indicates that the corresponding
+   schema is present in the database and need not be reasserted."]]
+
+ [[:user/part :clj-west/messages "Partition for storing our txs."]]
+
+ [[:user/attr :clj-west.messages/id :long
+   {:db/unique :db.unique/identity}
+   "The ID of our message."]
+  [:user/attr :clj-west.messages/msg :string
+   {:db/cardinality :db.cardinality/one}
+   "The message text."]]
+]
