@@ -9,5 +9,11 @@
                   :exclusions [commons-logging]]
                  [ring/ring-core "1.2.0"]
                  [compojure "1.1.5"]
-                 [com.datomic/datomic-pro "starter.4202"]]
-  :plugins [[lein-ring "0.8.0"]])
+                 [com.datomic/datomic-pro "0.9.4609"]]
+  :plugins [[lein-ring "0.8.0"]]
+  ;; To access Datomic's maven repo, set the following environment variables:
+  ;; export MY_DATOMIC_USERNAME=<USERNAME>
+  ;; export MY_DATOMIC_PASSWORD=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  :repositories {"my.datomic.com" {:url "https://my.datomic.com/repo"
+                                   :username :env/MY_DATOMIC_USERNAME
+                                   :password :env/MY_DATOMIC_PASSWORD}})
