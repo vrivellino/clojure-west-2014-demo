@@ -1,0 +1,691 @@
+{
+    "Description": "Datomic Web App Demo",
+    "Parameters": {
+        "Stage" : {
+            "Description" : "The 'Stage', or environment, in which this stack will run.",
+            "Type" : "String",
+            "Default" : "staging",
+            "AllowedValues" : [ "staging", "loadtest", "qa", "production" ]
+        },
+        "SrcBucket" : {
+            "Description" : "S3 bucket for WarFile and Oracle JDK rpm",
+            "Type" : "String",
+            "MinLength" : "1",
+            "MaxLength" : "64",
+            "AllowedPattern" : "[-_a-zA-Z0-9.]*"
+        },
+        "WarFile" : {
+            "Description" : "Path to uberwar file in SrcBucket",
+            "Type" : "String",
+            "MinLength" : "1",
+            "MaxLength" : "128"
+        },
+        "JdkRpm" : {
+            "Description" : "Path to Oracle JdkRpm in SrcBucket for transactor",
+            "Type" : "String",
+            "MinLength" : "1",
+            "MaxLength" : "128",
+            "Default" : "jdk-7u51-linux-x64.rpm"
+        },
+        "LicenseFile" : {
+            "Description" : "Path to file containing Datomic License Key in SrcBucket for transactor",
+            "Type" : "String",
+            "MinLength" : "1",
+            "MaxLength" : "128",
+            "Default" : "datomic-license-key"
+        },
+        "TransactorLogBucket" : {
+            "Description" : "S3 bucket for transactor logs rotation",
+            "Type" : "String",
+            "MinLength" : "1",
+            "MaxLength" : "64",
+            "AllowedPattern" : "[-_a-zA-Z0-9.]*"
+        },
+        "SshKey" : {
+            "Description" : "EC2 Key Pair name",
+            "Type" : "String",
+            "Default" : "none",
+            "MaxLength" : "128"
+        },
+        "DatomicVersion": {
+            "Description" : "Datomic Pro Version for the transactor",
+            "Type": "String",
+            "Default": "0.9.4609",
+            "AllowedPattern" : "[0-9.]*"
+        },
+        "MyDatomicUserName" : {
+            "Description" : "My Datomic Username (usually your email address)",
+            "Type" : "String",
+            "MaxLength" : "64"
+        },
+        "MyDatomicPassword" : {
+            "Description" : "My Datomic Password",
+            "Type" : "String",
+            "MaxLength" : "64",
+            "NoEcho" : "true"
+        },
+        "AutoTermTransactor" : {
+            "Description" : "Flag that tells transactor to auto-terminate after failure",
+            "Type": "String",
+            "Default" : "true",
+            "AllowedValues" : [ "true", "false" ]
+        }
+    },
+
+    "Mappings": {
+        "config" : {
+            "us-east-1" : {
+                "ami" : "ami-bba18dd2"
+            },
+            "us-west-1" : {
+                "ami" : "ami-a43909e1"
+            },
+            "us-west-2" : {
+                "ami" : "ami-ccf297fc"
+            }
+        },
+        "stage" : {
+            "staging" : {
+                "peersecgrp" : "datomic-demo-peer-staging",
+                "ddbTable" : "datomic_demo_staging",
+                "transactorInstanceType" : "m1.small",
+                "peerInstanceType" : "m1.small",
+                "transGrpMinSize" : "0",
+                "transGrpMaxSize" : "2",
+                "peerGrpMinSize" : "2",
+                "peerGrpMaxSize" : "2"
+            },
+            "loadtest" : {
+                "peersecgrp" : "datomic-demo-peer-loadtest",
+                "ddbTable" : "datomic_demo_loadtest",
+                "transactorInstanceType" : "m1.large",
+                "peerInstanceType" : "m1.large",
+                "transGrpMinSize" : "0",
+                "transGrpMaxSize" : "2",
+                "peerGrpMinSize" : "2",
+                "peerGrpMaxSize" : "2"
+            },
+            "qa" : {
+                "peersecgrp" : "datomic-demo-peer-qa",
+                "ddbTable" : "datomic_demo_qa",
+                "transactorInstanceType" : "m1.small",
+                "peerInstanceType" : "m1.small",
+                "transGrpMinSize" : "0",
+                "transGrpMaxSize" : "2",
+                "peerGrpMinSize" : "2",
+                "peerGrpMaxSize" : "2"
+            },
+            "production" : {
+                "peersecgrp" : "datomic-demo-peer-loadtest",
+                "ddbTable" : "datomic_demo_loadtest",
+                "transactorInstanceType" : "m1.large",
+                "peerInstanceType" : "m1.large",
+                "transGrpMinSize" : "0",
+                "transGrpMaxSize" : "2",
+                "peerGrpMinSize" : "2",
+                "peerGrpMaxSize" : "2"
+            }
+        },
+        "tomcatConfig" : {
+            "global" : {
+                "elbhealthcheck" : "HTTP:8080/health-check",
+                "JavaOpts" : "-server -XX:NewRatio=5 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -Dcom.sun.management.jmxremote"
+            },
+            "m1.small": { "Xms" : "256m", "Xmx" : "1280m", "MaxPermSize" : "128m" },
+            "m1.large": { "Xms" : "512m", "Xmx" : "6656m", "MaxPermSize" : "512m" }
+        },
+
+        "transactorConfig": {
+            "global" : {
+                "JavaOpts" : "'-XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly'"
+            },
+
+            "m1.small": {
+                "Xmx" : "1190m",
+                "transSettings" : "memory-index-threshold=32m\nmemory-index-max=64m\nobject-cache-max=96m\n",
+                "memIndexMbAlarmThresh" : "72"
+            },
+            "m1.large": {
+                "Xmx" : "5250m",
+                "transSettings" : "memory-index-threshold=256m\nmemory-index-max=512m\nobject-cache-max=768\n",
+                "memIndexMbAlarmThresh" : "384"
+            }
+        }
+    },
+
+    "Conditions" : {
+        "IsProd" : { "Fn::Equals" : [ { "Ref" : "Stage" }, "production" ] },
+        "NoSshKey" : { "Fn::Equals" : [ { "Ref" : "SshKey" }, "SshKey" ] }
+    },
+
+    "Resources" : {
+
+        "CfnUser" : {
+            "Type" : "AWS::IAM::User",
+            "Properties" : {
+                "Path" : "/",
+                "Policies" : [ {
+                    "PolicyName": "DescribeCfn",
+                    "PolicyDocument": {
+                        "Statement": [{
+                            "Effect" : "Allow",
+                            "Action" : [ "cloudformation:Describe*" ],
+                            "Resource" : "*"
+                        }]
+                    }
+                },{
+                    "PolicyName" : "S3read",
+                    "PolicyDocument" : {
+                        "Statement" : [{
+                            "Effect"   : "Allow",
+                            "Action"   : [ "s3:Get*", "s3:List*"  ],
+                            "Resource" : [ { "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "SrcBucket" }, "/*" ] ]},
+                                           { "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "SrcBucket" } ] ]} ]
+                        }]
+                    }
+                }]
+            }
+        },
+
+        "CfnKeys" : {
+            "Type" : "AWS::IAM::AccessKey",
+            "Properties" : {
+                "UserName" : { "Ref" : "CfnUser" }
+            }
+        },
+
+        "TransRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+                        "Action": [ "sts:AssumeRole" ]
+                    } ]
+                },
+                "Path": "/",
+                "Policies": [ {
+                    "PolicyName" : "CWmetrics",
+                    "PolicyDocument" : {
+                        "Statement" : [{
+                            "Effect" : "Allow",
+                            "Action": [ "cloudwatch:PutMetricData", "cloudwatch:PutMetricDataBatch" ],
+                            "Condition" : { "Bool" : { "aws:SecureTransport" : "true" } },
+                            "Resource" : "*"
+                        }]
+                    }
+                },{
+                    "PolicyName" : "DDB",
+                    "PolicyDocument" : {
+                        "Statement" : [{
+                            "Effect" : "Allow",
+                            "Action" : [ "dynamodb:*" ],
+                            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:dynamodb:*:", { "Ref" : "AWS::AccountId" }, ":table/", { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "ddbTable" ] } ] ]}
+                        }]
+                    }
+                },{
+                    "PolicyName" : "LogRotation",
+                    "PolicyDocument" : {
+                        "Statement" : [{
+                            "Effect" : "Allow",
+                            "Action" : [ "s3:PutObject" ],
+                            "Resource": [ { "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "TransactorLogBucket" } ] ]},
+                                          { "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "TransactorLogBucket" }, "/*" ] ]} ]
+                        }]
+                    }
+                }]
+            }
+        },
+
+        "TransInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/",
+                "Roles": [{ "Ref": "TransRole" }]
+            }
+        },
+
+        "PeerRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+                        "Action": [ "sts:AssumeRole" ]
+                    } ]
+                },
+                "Path": "/",
+                "Policies": [ {
+                    "PolicyName" : "PeerPrivs",
+                    "PolicyDocument" : {
+                        "Statement" : [{
+                            "Effect" : "Allow",
+                            "Action": [ "cloudwatch:PutMetricData", "cloudwatch:PutMetricDataBatch" ],
+                            "Resource" : "*"
+                        },{
+                            "Effect" : "Allow",
+                            "Action" : [ "dynamodb:GetItem", "dynamodb:BatchGetItem", "dynamodb:Scan", "dynamodb:Query" ],
+                            "Resource" : { "Fn::Join" : [ "", [ "arn:aws:dynamodb:*:", { "Ref" : "AWS::AccountId" }, ":table/", { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "ddbTable" ] } ] ]}
+                        }]
+                    }
+                }]
+            }
+        },
+
+        "PeerInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/",
+                "Roles": [{ "Ref": "PeerRole" }]
+            }
+        },
+
+        "TransactorSecGrp" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : { "Fn::Join" : [ " ", [ { "Ref" : "AWS::StackName" }, "Transactors" ] ]}
+            }
+        },
+
+        "PeerSecGrp" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : { "Fn::Join" : [ " ", [ { "Ref" : "AWS::StackName" }, "Peers" ] ]}
+            }
+        },
+
+        "TransIngressSsh" : {
+            "Type" : "AWS::EC2::SecurityGroupIngress",
+            "Properties" : {
+                "GroupName" : { "Ref" : "TransactorSecGrp" },
+                "IpProtocol" : "tcp",
+                "CidrIp" : "0.0.0.0/0",
+                "FromPort" : "22", "ToPort" : "22"
+            }
+        },
+
+        "PeerIngressSsh" : {
+            "Type" : "AWS::EC2::SecurityGroupIngress",
+            "Properties" : {
+                "GroupName" : { "Ref" : "PeerSecGrp" },
+                "IpProtocol" : "tcp",
+                "CidrIp" : "0.0.0.0/0",
+                "FromPort" : "22", "ToPort" : "22"
+            }
+        },
+
+        "Peer2Transactor" : {
+            "Type" : "AWS::EC2::SecurityGroupIngress",
+            "Properties" : {
+                "GroupName" : { "Ref" : "TransactorSecGrp" },
+                "IpProtocol" : "tcp",
+                "SourceSecurityGroupName" : { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "peersecgrp" ] },
+                "FromPort" : "4334", "ToPort" : "4334"
+            }
+        },
+
+        "Port8080Ingress" : {
+            "Type" : "AWS::EC2::SecurityGroupIngress",
+            "Properties" : {
+                "GroupName" : { "Ref" : "PeerSecGrp" },
+                "IpProtocol" : "tcp",
+                "CidrIp" : "0.0.0.0/0",
+                "FromPort" : "8080", "ToPort" : "8080"
+            }
+        },
+
+        "TransactorLaunchConfig" : {
+            "Type" : "AWS::AutoScaling::LaunchConfiguration",
+            "Metadata" : {
+                "AWS::CloudFormation::Authentication" : {
+                    "S3AccessCreds" : {
+                        "type" : "S3",
+                        "accessKeyId" : { "Ref" : "CfnKeys" },
+                        "secretKey" : {"Fn::GetAtt": ["CfnKeys", "SecretAccessKey"]},
+                        "buckets" : [ { "Ref" : "SrcBucket" } ]
+                    }
+                },
+                "AWS::CloudFormation::Init" : {
+                    "config" : {
+                        "files" : {
+                            "/tmp/jdk.rpm" : {
+                                "source" : { "Fn::Join" : [ "", [ "https://s3.amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "JdkRpm" } ] ]},
+                                "mode" : "000644",
+                                "owner" : "root",
+                                "group" : "root"
+                            },
+                            "/tmp/datomic-license-key" : {
+                                "source" : { "Fn::Join" : [ "", [ "https://s3.amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "LicenseFile" } ] ]},
+                                "mode" : "000600",
+                                "owner" : "root",
+                                "group" : "root"
+                            }
+                        },
+                        "commands" : {
+                            "setup_java" : {
+                                "command" : { "Fn::Join" : [ "", [
+                                    "yum localinstall /tmp/jdk.rpm -y\n",
+                                    "alternatives --install /usr/bin/java java /usr/java/latest/jre/bin/java 90000\n"
+                                ] ]}
+                            },
+                            "install_datomic" : {
+                                "cwd" : "/tmp",
+                                "command" : { "Fn::Join" : [ "", [
+                                    "wget -O /tmp/datomic.zip --http-user=", { "Ref" : "MyDatomicUserName" }, " --http-password=", { "Ref" : "MyDatomicPassword" },
+                                      " https://my.datomic.com/repo/com/datomic/datomic-pro/", { "Ref" : "DatomicVersion" }, "/datomic-pro-", { "Ref" : "DatomicVersion" }, ".zip\n",
+                                    "unzip datomic.zip && mv datomic-pro-", { "Ref" : "DatomicVersion" }, " /datomic\n",
+                                    "chown -R root:root /datomic"
+                                ] ]}
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties" : {
+                "ImageId" : { "Fn::FindInMap" : [ "config", { "Ref" : "AWS::Region" }, "ami" ] },
+                "KeyName" : { "Fn::If": [ "NoSshKey", { "Ref" : "AWS::NoValue" }, { "Ref" : "SshKey" } ]},
+                "InstanceType" : { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "transactorInstanceType" ] },
+                "BlockDeviceMappings": [ { "VirtualName": "ephemeral0", "DeviceName": "/dev/sdb" } ],
+                "SecurityGroups" : [ { "Ref" : "TransactorSecGrp" } ],
+                "IamInstanceProfile" : { "Ref" : "TransInstanceProfile" },
+                "UserData": {
+                    "Fn::Base64": { "Fn::Join": [ "", [
+                        "#!/bin/bash\n",
+                        "\n",
+                        "# Uncomment if we associate CloudFormation Metadata w/ TransactorLaunchConfig\n",
+                        "yum update -y aws-cfn-bootstrap\n",
+                        "\n",
+                        "/opt/aws/bin/cfn-init -v -s ", { "Ref" : "AWS::StackName" }, " -r TransactorLaunchConfig",
+                        " --access-key \"", { "Ref" : "CfnKeys" }, "\"",
+                        " --secret-key \"", {"Fn::GetAtt": ["CfnKeys", "SecretAccessKey"]}, "\"",
+                        " --region ", { "Ref" : "AWS::Region" }, " || exit $?\n",
+                        "\n",
+                        "mkdir -m755 /datomic/log\n",
+                        "mount /dev/sdb /datomic/log\n",
+                        "export XMX=", { "Fn::FindInMap" : [ "transactorConfig",
+                                         { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "transactorInstanceType" ] },
+                                         "Xmx" ] }, "\n",
+                        "export JAVA_OPTS=", { "Fn::FindInMap" : [ "transactorConfig", "global", "JavaOpts" ] }, "\n",
+                        "cd /datomic\n",
+                        "cat <<EOF >aws.properties\n",
+                        "host=`curl http://169.254.169.254/latest/meta-data/local-ipv4`\n",
+                        "alt-host=`curl http://169.254.169.254/latest/meta-data/public-ipv4`\n",
+                        "port=4334\n",
+                        "license-key=`cat /tmp/datomic-license-key`\n",
+                        "protocol=ddb\n",
+                        { "Fn::FindInMap" : [ "transactorConfig",
+                                              { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "transactorInstanceType" ] },
+                                              "transSettings" ] }, "\n",
+                        "aws-transactor-role=", { "Ref" : "TransRole" }, "\n",
+                        "aws-peer-role =", { "Ref" : "PeerRole" }, "\n",
+                        "aws-dynamodb-region=", { "Ref": "AWS::Region" }, "\n",
+                        "aws-dynamodb-table=", { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "ddbTable" ] }, "\n",
+                        "aws-cloudwatch-region=", { "Ref": "AWS::Region" }, "\n",
+                        "aws-cloudwatch-dimension-value=", { "Ref" : "AWS::StackName" }, "\n",
+                        "aws-s3-log-bucket-id=", { "Ref" : "TransactorLogBucket" }, "\n",
+                        "EOF\n",
+                        "chmod 744 aws.properties\n",
+                        "\n",
+                        "(\n",
+                        "  ( ./bin/transactor -Xms256m -Xmx$XMX $JAVA_OPTS ./aws.properties\n",
+                        "    instance_id=$(curl http://169.254.169.254/latest/meta-data/instance-id)\n",
+                        "    shutdown_time=$(date +%Y-%m-%d-%H-%M-%S)\n",
+                        "    shutdown_date=$(date +%Y-%m-%d)\n",
+                        "    s3_target=\"s3://", { "Ref" : "TransactorLogBucket" }, "/", 
+                             { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "ddbTable" ] }, "/final/$shutdown_time\"\n",
+                        "    echo\n",
+                        "    aws s3 cp /datomic/log/$shutdown_date.log $s3_target/$instance_id-$shutdown_date.log\n",
+                        "    aws s3 cp /datomic/console.log $s3_target/$instance_id-console.log\n",
+                        "    [ '", { "Ref" : "AutoTermTransactor" }, "' = 'true' ] && shutdown -h now\n",
+                        ") > ./console.log 2>&1 ) & \n" ] ]}
+                }
+            }
+        },
+
+        "TransactorLaunchGroup" : {
+            "Type" : "AWS::AutoScaling::AutoScalingGroup",
+            "UpdatePolicy": {
+                "AutoScalingRollingUpdate" : { "Fn::If": [ "IsProd",
+                    { "Ref" : "AWS::NoValue" },
+                    { "MaxBatchSize": "1", "MinInstancesInService": "1", "PauseTime": "PT1M00S" }
+                ]}
+            },
+            "Properties" : {
+                "AvailabilityZones" : { "Fn::GetAZs" : "" },
+                "LaunchConfigurationName" : { "Ref" : "TransactorLaunchConfig" },
+                "MinSize" : { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "transGrpMinSize" ] },
+                "MaxSize" : { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "transGrpMaxSize" ] },
+                "Tags" : [{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "AWS::StackName" }, "transactor" ] ]}, "PropagateAtLaunch" : "true" },
+                          { "Key" : "Stage", "Value" : { "Ref" : "Stage" }, "PropagateAtLaunch" : "true" }]
+            }
+        },
+
+        "ElasticLoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+            "Properties": {
+                "AvailabilityZones" : { "Fn::GetAZs" : "" },
+                "Listeners": [
+                    { "LoadBalancerPort" : "80", "InstancePort" : "8080", "Protocol" : "HTTP" }
+                ],
+                "HealthCheck": {
+                    "Target": "HTTP:8080/health-check",
+                    "HealthyThreshold": "3",
+                    "UnhealthyThreshold": "3",
+                    "Interval": "12",
+                    "Timeout": "5"
+                }
+            }
+        },
+
+        "UnHealthyHostAlert": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "AlarmDescription": "Alarm if UnHealthyHostCount non-zero for too long.",
+                "Namespace": "AWS/ELB",
+                "MetricName": "UnHealthyHostCount",
+                "Dimensions": [{
+                    "Name": "LoadBalancerName",
+                    "Value" : { "Ref" : "ElasticLoadBalancer" }
+                }],
+                "Statistic": "Maximum",
+                "Period": "60",
+                "EvaluationPeriods": "45",
+                "Threshold": "0",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "AlarmActions": []
+            }
+        },
+
+        "PeerLaunchConfig" : {
+            "Type" : "AWS::AutoScaling::LaunchConfiguration",
+            "Metadata" : {
+                "AWS::CloudFormation::Authentication" : {
+                    "S3AccessCreds" : {
+                        "type" : "S3",
+                        "accessKeyId" : { "Ref" : "CfnKeys" },
+                        "secretKey" : {"Fn::GetAtt": ["CfnKeys", "SecretAccessKey"]},
+                        "buckets" : [ { "Ref" : "SrcBucket" } ]
+                    }
+                },
+                "AWS::CloudFormation::Init" : {
+                    "config" : {
+                        "packages" : {
+                            "yum" : {
+                                "tomcat7" : []
+                            }
+                        },
+                        "files" : {
+                            "/var/lib/tomcat7/webapps/ROOT.war" : {
+                                "source" : { "Fn::Join" : [ "", [ "https://s3.amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "WarFile" } ] ]},
+                                "mode" : "000644",
+                                "owner" : "tomcat",
+                                "group" : "tomcat"
+                            },
+                            "/etc/sysconfig/tomcat7" : {
+                                "mode" : "000640",
+                                "owner" : "root",
+                                "group" : "tomcat",
+                                "content" : { "Fn::Join" : [ "", [
+                                    "JAVA_OPTS=\"", { "Fn::FindInMap" : [ "tomcatConfig", "global", "JavaOpts" ] },
+                                    " -Xms", { "Fn::FindInMap" : [ "tomcatConfig",
+                                               { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "peerInstanceType" ] },
+                                               "Xms" ] },
+                                    " -Xmx", { "Fn::FindInMap" : [ "tomcatConfig",
+                                               { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "peerInstanceType" ] },
+                                               "Xmx" ] },
+                                    " -XX:MaxPermSize=", { "Fn::FindInMap" : [ "tomcatConfig",
+                                               { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "peerInstanceType" ] },
+                                               "MaxPermSize" ] }, 
+                                    " -DDATOMIC_URI=datomic:ddb://", { "Ref" : "AWS::Region" },
+                                      "/", { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "ddbTable" ] }, "/",
+                                    "\"\n"
+                                ] ]}
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties" : {
+                "InstanceType" : { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "peerInstanceType" ] },
+                "KeyName" : { "Fn::If": [ "NoSshKey", { "Ref" : "AWS::NoValue" }, { "Ref" : "SshKey" } ]},
+                "ImageId" : { "Fn::FindInMap" : [ "config", { "Ref" : "AWS::Region" }, "ami" ] },
+                "SecurityGroups" : [ { "Ref" : "PeerSecGrp" }, { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "peersecgrp" ] } ],
+                "IamInstanceProfile" : { "Ref" : "PeerInstanceProfile" },
+                "UserData" : {
+                    "Fn::Base64" : { "Fn::Join" : [ "", [
+                        "#!/bin/bash\n",
+                        "\n",
+                        "yum update -y aws-cfn-bootstrap\n",
+                        "\n",
+                        "/opt/aws/bin/cfn-init -v -s ", { "Ref" : "AWS::StackName" }, " -r PeerLaunchConfig",
+                        " --access-key \"", { "Ref" : "CfnKeys" }, "\"",
+                        " --secret-key \"", {"Fn::GetAtt": ["CfnKeys", "SecretAccessKey"]}, "\"",
+                        " --region ", { "Ref" : "AWS::Region" }, " || exit $?\n",
+                        "\n",
+                        "# Hack to force instance shutdown when war file changes\n",
+                        "# War File: ", { "Ref" : "SrcBucket" }, "/", { "Ref" : "WarFile" }, "\n",
+                        "\n",
+                        "service tomcat7 start\n",
+                        "chkconfig tomcat7 on\n",
+                        "\n"
+                    ] ]}
+                }
+            }
+        },
+
+        "PeerLaunchGroup" : {
+            "Type" : "AWS::AutoScaling::AutoScalingGroup",
+            "UpdatePolicy": {
+                "AutoScalingRollingUpdate" : { "Fn::If": [ "IsProd",
+                    { "Ref" : "AWS::NoValue" },
+                    { "MaxBatchSize": "1", "MinInstancesInService": "1", "PauseTime": "PT1M00S" }
+                ]}
+            },
+             "Properties" : {
+                "LaunchConfigurationName" : { "Ref" : "PeerLaunchConfig" },
+                "MinSize" : { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "peerGrpMinSize" ] },
+                "MaxSize" : { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "peerGrpMaxSize" ] },
+                "Cooldown" : "120",
+                "HealthCheckGracePeriod" : "1200",
+                "HealthCheckType" : "EC2",
+                "AvailabilityZones" : { "Fn::GetAZs" : "" },
+                "LoadBalancerNames" : [{ "Ref" : "ElasticLoadBalancer" }],
+                "Tags" : [{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "AWS::StackName" }, "peer" ] ]}, "PropagateAtLaunch" : "true" },
+                          { "Key" : "Stage", "Value" : { "Ref" : "Stage" }, "PropagateAtLaunch" : "true" }]
+            }
+        },
+
+        "DatomicStoragePutBackoff": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "AlarmDescription": "Storage Put Backoff - Profj Datomic: indicates possible under-provisioned for writes",
+                "Namespace": "Datomic",
+                "MetricName": "StoragePutBackoffMsec",
+                "Dimensions": [{
+                    "Name": "Transactor",
+                    "Value" : { "Ref" : "AWS::StackName" }
+                }],
+                "Statistic": "Sum",
+                "Period": "300",
+                "EvaluationPeriods": "1",
+                "Threshold": "20000",
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "AlarmActions": []
+            }
+        },
+
+        "DatomicAlarm": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "AlarmDescription": "Transactor Alarm - Profj Datomic: generic alarm",
+                "Namespace": "Datomic",
+                "MetricName": "Alarm",
+                "Dimensions": [{
+                    "Name": "Transactor",
+                    "Value" : { "Ref" : "AWS::StackName" }
+                }],
+                "Statistic": "SampleCount",
+                "Period": "300",
+                "EvaluationPeriods": "1",
+                "Threshold": "0",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "AlarmActions": []
+            }
+        },
+
+        "DatomicSuicide": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "AlarmDescription": "Transactor Suicide - Profj Datomic",
+                "Namespace": "Datomic",
+                "MetricName": "SelfDestruct",
+                "Dimensions": [{
+                    "Name": "Transactor",
+                    "Value" : { "Ref" : "AWS::StackName" }
+                }],
+                "Statistic": "Sum",
+                "Period": "900",
+                "EvaluationPeriods": "1",
+                "Threshold": "0",
+                "ComparisonOperator": "GreaterThanThreshold",
+                "AlarmActions": []
+            }
+        },
+
+        "DatomicMemIndexMB": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "AlarmDescription": "Transactor Alarm - Profj Datomic: MemoryIndexMB too high",
+                "Namespace": "Datomic",
+                "MetricName": "MemoryIndexMB",
+                "Dimensions": [{
+                    "Name": "Transactor",
+                    "Value" : { "Ref" : "AWS::StackName" }
+                }],
+                "Statistic": "Maximum",
+                "Period": "300",
+                "EvaluationPeriods": "2",
+                "Threshold": { "Fn::FindInMap" : [ "transactorConfig", { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "transactorInstanceType" ] }, "memIndexMbAlarmThresh" ] },
+                "ComparisonOperator": "GreaterThanThreshold",
+                "AlarmActions": []
+            }
+        }
+    },
+
+    "Outputs" : {
+        "TransLaunchGroup" : {
+            "Description" : "Transactor Auto-Scaling Group",
+            "Value" : { "Ref" : "TransactorLaunchGroup"}
+        },
+        "PeerLaunchGroup" : {
+            "Description" : "Peer Auto-Scaling Group",
+            "Value" : { "Ref" : "PeerLaunchGroup"}
+        },
+        "ELBDNS" : {
+            "Description" : "DNS Name of Peer Load Balancer",
+            "Value" : { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ] }
+        }
+    }
+}
