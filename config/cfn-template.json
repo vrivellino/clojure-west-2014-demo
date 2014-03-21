@@ -155,7 +155,7 @@
 
     "Conditions" : {
         "IsProd" : { "Fn::Equals" : [ { "Ref" : "Stage" }, "production" ] },
-        "NoSshKey" : { "Fn::Equals" : [ { "Ref" : "SshKey" }, "SshKey" ] }
+        "NoSshKey" : { "Fn::Equals" : [ { "Ref" : "SshKey" }, "none" ] }
     },
 
     "Resources" : {
