@@ -7,7 +7,6 @@
             [datomic.api :as d]
             [clj-west.lifecycle :refer (Lifecycle)])
   (:import [clojure.lang ExceptionInfo]
-           [java.util.concurrent Executors TimeUnit ScheduledExecutorService]
            [org.joda.time LocalTime]
            [java.security MessageDigest]))
 

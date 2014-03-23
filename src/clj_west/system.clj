@@ -1,7 +1,6 @@
 (ns clj-west.system
   "Initialization"
-  (:require [datomic.api :as d]
-            [clj-west.config :as config]
+  (:require [clj-west.config :as config]
             [clj-west.datomic]
             [clj-west.lifecycle :refer (Lifecycle start stop)]
             [clj-west.server]))
@@ -18,7 +17,7 @@
 
 (defn destroy-servlet
   []
-  (let [ddb-peer (:db-peer clj-west.server/*app-context*)]
+  (let [ddb-peer (:ddb-peer clj-west.server/*app-context*)]
     (when ddb-peer @(stop ddb-peer))
     (alter-var-root #'clj-west.server/*app-context*
                     (constantly nil))))
