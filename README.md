@@ -7,12 +7,11 @@ TODO: Expand description
 
 ## Prerequisites
 
-* [AWS Account](http://aws.amazon.com) and and Access Keys
+* [AWS Account](http://aws.amazon.com) and Access Keys
 * [Datomic Pro Starter](http://www.datomic.com/get-datomic.html) license and credentials
 * [leiningen](https://github.com/technomancy/leiningen)
 * [AWS CLI tools](http://aws.amazon.com/cli/)
-* Oracle Java7
-* Java7 JDK Linux RPM downloaded from Oracle (jdk-7u51-linux-x64.rpm) - this is needed by the transactor
+* Java7 JDK Linux RPM downloaded from Oracle ([jdk-7u51-linux-x64.rpm](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html)) - this is needed by the transactor
 
 ## Getting Started
 
