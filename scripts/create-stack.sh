@@ -8,7 +8,8 @@ fi
 set -e
 . `dirname $0`/.demo.env
 
-warfile=uberwars/`basename $1`
+warfile=uberwars/`basename $1 .war`-`stat -c %Y $1`.war
+# Uploaded war file will have modifcation ts embedded in its name
 aws s3 cp "$1" "s3://$SRCBUCKET/$warfile"
 
 parameters="--parameters ParameterKey=SrcBucket,ParameterValue=$SRCBUCKET"
