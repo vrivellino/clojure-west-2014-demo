@@ -90,7 +90,7 @@
       (when-not (str/blank? memcached-nodes)
         (System/setProperty "datomic.memcacheServers" memcached-nodes))
       (try
-
+        (d/create-database uri)
         (let [conn (d/connect uri)]
           (init-db conn))
         (catch Throwable t
