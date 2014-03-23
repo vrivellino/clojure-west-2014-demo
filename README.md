@@ -3,15 +3,42 @@ clojure-west-2014-demo
 
 Simple Web Service that saves messages to Datomic.
 
-TODO: Expand description
+_Note: the web app is currently a work-in-progress._
 
-## Prerequisites
+## Overview
+
+This is a demo web application that saves data sent to the /write endpoint to
+Datomic, and reads from Datomic for queries to the /read endpoint.
+
+```
+$ curl 'http://localhost:3001/write?id=1&msg=HelloWorld'
+1006
+$ curl 'http://localhost:3001/read?id=1'
+# TODO: Need read example output
+```
+
+This project provides a reference implementation of deploying Datomic in AWS as
+a follow-up to my presentation at Clojure/West 2014:
+_DevOps Done Right: Room Key's Datomic Deployment in AWS_
+
+### CloudFormation Template
+
+The provided CloudFormation template (`config/cfn-template.json`) builds a stack,
+peers and transactors, without using the tools included in the Datomic
+distribution. The web application included is very basic, but the template
+includes examples of many advanced CloudFormation features, including
+Conditions, Auto Scaling Update Policy, and CloudFormation MetaData. 
+
+The template should provide a refernce for those who may want to run a custom
+Datomic deployment in Amazon Web Services.
+
+### Prerequisites
 
 * [AWS Account](http://aws.amazon.com) and Access Keys
 * [Datomic Pro Starter](http://www.datomic.com/get-datomic.html) license and credentials
 * [leiningen](https://github.com/technomancy/leiningen)
 * [AWS CLI tools](http://aws.amazon.com/cli/)
-* Java7 JDK Linux RPM downloaded from Oracle ([jdk-7u51-linux-x64.rpm](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html)) - this is needed by the transactor
+* Java7 JDK Linux RPM downloaded from Oracle ([jdk-7u51-linux-x64.rpm](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html))
 
 ## Getting Started
 
@@ -29,7 +56,7 @@ but other AWS tools and libraries look for them, so they're useful to have set.
 For example, add the following to your ~/.bashrc
 
 ```sh
-export MY_DATOMIC_USERNAME=vince@demo.domain
+export MY_DATOMIC_USERNAME=username@demo.domain
 export MY_DATOMIC_PASSWORD=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 
 export AWS_ACCESS_KEY_ID=AKI...
@@ -96,7 +123,7 @@ Keep this handy, the script that creates resources in AWS will upload it to S3.
 ### Save your Datomic License Key
 
 After your register for Datomic Pro Starter, save the license key they send you
-to a file. Don't include 'license-key=' when you save it - just save the key.
+to a file. Don't include _license-key=_ when you save it - just save the key.
 
 ## Running Locally
 
@@ -111,6 +138,7 @@ scripts/download-datomic-pro.sh.
 For example:
 
 ```sh
+mkdir ~/download
 cd ~/download
 ../clojure-west-2014-demo/scripts/download-datomic-pro.sh
 ```
@@ -163,7 +191,7 @@ The mk-aws-resources.sh saves an environment file in the scripts directory named
 .demo.env. The other scripts read in details about your environment from it.
 
 To remove the resources mk-aws-resources.sh created, make sure there are no
-CloudFormation stacks running, then run scripts/rm-aws-resources.sh.
+CloudFormation stacks running, then run `scripts/rm-aws-resources.sh`.
 
 ### Creating Prerequisite AWS Resources
 
@@ -211,11 +239,16 @@ Pass in the path to the war file the lein ring uberwar generated, as well as a
 stack name:
 
 ```sh
-./scripts/create-stack.sh /home/var/clojure-west-2014-demo/target/clj-west-0.0.1-SNAPSHOT-standalone.war datomic-demo-staging
+./scripts/create-stack.sh \
+    /home/var/clojure-west-2014-demo/target/clj-west-0.0.1-SNAPSHOT-standalone.war \
+    datomic-demo-staging
 ```
 
 **NOTE: The EC2 instance-types defined in the CloudFormation template are
 _not_ in the free tier, so creating this stack _will cost you money_.**
+
+The war file you specified will be uploaded to S3 by create-stack.sh, and then
+passed in as a parameter to the stack it creates.
 
 Watch your stack come online by logging into the AWS Console and selecting
 CloudFormation under Services. Once the stack's status is CREATE_COMPLETE,
@@ -224,17 +257,22 @@ lookup the TransLaunchGroup output value in the Outputs tab.
 Then scale-up the transactor Auto Scaling Group to one:
 
 ```sh
-aws autoscaling set-desired-capacity --desired-capacity 1 --no-honor-cooldown --auto-scaling-group-name datomic-demo-staging-TransactorLaunchGroup-XXXXXXXXXXXXX
+aws autoscaling set-desired-capacity --desired-capacity 1 \
+    --no-honor-cooldown \
+    --auto-scaling-group-name datomic-demo-staging-TransactorLaunchGroup-XXXXXXXXXXXXX
 ```
 
-If you want high-availability, just specify `--desired-capacity 1`.
+If you want high-availability, just specify `--desired-capacity 2`.
 
 Also listed in the stack outputs is the hostname of the peer Elastic Load
 Balancer.
 
 We can use this hostname to write data to Datomic, and to query it:
 
-TODO: Examples with curl against ELBDNS
+TODO: Examples with curl hitting /query & /read against ELBDNS
+
+If you'd like to log in to the instances, look up their hostname in the EC2
+console.
 
 ### Deploying an Update
 
@@ -251,18 +289,22 @@ arguments as create-stack.sh.
 For example:
 
 ```sh
-./scripts/update-stack.sh /home/var/clojure-west-2014-demo/target/clj-west-0.0.2-SNAPSHOT-standalone.war datomic-demo-staging
+./scripts/update-stack.sh \
+    /home/var/clojure-west-2014-demo/target/clj-west-0.0.2-SNAPSHOT-standalone.war \
+    datomic-demo-staging
 ```
 
 The CloudFormation template has Update Policies defined for the transactor and
 peer Auto Scaling groups, so CloudFormation will take care of cycling instances.
+You can watch the actions CloudFormation is taking by viewing the stack's
+Events tab in the CloudFormation console.
 
 If you choose to create a new stack, you'll need to scale-up the transactor
 auto scaling group in the new stack while scaling down the transactor group in
 the old stack.
 
-(Both methods were described in my presentation, and I leave it as an exercise
-to the user to work through them.)
+Both methods were described in my presentation, and I leave it as an exercise to
+the user to work through them.
 
 ## Cleaning up
 
@@ -277,7 +319,7 @@ stack you created:
 ./scripts/delete-stack.sh datomic-demo-staging
 ```
 
-After the stack is completed deleted, run rm-aws-resources.sh:
+After the stack is completely deleted, run rm-aws-resources.sh:
 
 ```sh
 ./scripts/rm-aws-resources.sh
