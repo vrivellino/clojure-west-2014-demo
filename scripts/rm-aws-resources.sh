@@ -7,13 +7,13 @@ echo
 echo -n "Press <ENTER> to Continue ..."
 read junk
 
-if [ -n "$SRCBUCKET" ] && aws s3 ls | grep -q "\<$SRCBUCKET$" ; then
+if [ -n "$SRCBUCKET" ] && aws s3 ls --output text | grep -q "\<$SRCBUCKET$" ; then
 	set -x
 	aws s3 rm --recursive s3://$SRCBUCKET/
 	aws s3 rb s3://$SRCBUCKET
 	set +x
 fi
-if [ -n "$LOGBUCKET" ] && aws s3 ls | grep -q "\<$LOGBUCKET$" ; then
+if [ -n "$LOGBUCKET" ] && aws s3 ls --output text | grep -q "\<$LOGBUCKET$" ; then
 	set -x
 	aws s3 rm --recursive s3://$LOGBUCKET/
 	aws s3 rb s3://$LOGBUCKET

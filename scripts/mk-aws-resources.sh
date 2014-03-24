@@ -27,6 +27,7 @@ ts=`date +%s`
 SRCBUCKET=vriv-demo-src-$ts
 LOGBUCKET=vriv-demo-log-$ts
 SSHKEY=none
+scriptdir=`dirname $0`
 
 echo -n "Enter name of a S3 bucket for your war files [$SRCBUCKET]: "
 read src_input
@@ -48,6 +49,7 @@ MY_DATOMIC_USERNAME=$MY_DATOMIC_USERNAME
 MY_DATOMIC_PASSWORD=$MY_DATOMIC_PASSWORD
 SSHKEY=$SSHKEY
 _END_
+chmod 600 `dirname $0`/.demo.env
 
 read_prov=50
 write_prov=10
@@ -66,4 +68,6 @@ for env in staging production; do
 done
 
 aws s3 cp "$1" s3://$SRCBUCKET/
-aws s3 cp "$2" s3://$SRCBUCKET/datomic-license-key
+$scriptdir/_flatten-file.sh "$2" > "$2.flat"
+aws s3 cp "$2.flat" s3://$SRCBUCKET/datomic-license-key
+rm -f "$2.flat"

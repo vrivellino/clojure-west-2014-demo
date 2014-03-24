@@ -20,6 +20,12 @@
             "MinLength" : "1",
             "MaxLength" : "128"
         },
+        "NumTransactors" : {
+            "Description" : "Number of Transactors to start with - DesiredCapacity of transactor launch group",
+            "Type" : "String",
+            "Default" : "1",
+            "AllowedValues" : [ "0", "1", "2" ]
+        },
         "JdkRpm" : {
             "Description" : "Path to Oracle JdkRpm in SrcBucket for transactor",
             "Type" : "String",
@@ -92,7 +98,7 @@
                 "peerInstanceType" : "m1.small",
                 "transGrpMinSize" : "0",
                 "transGrpMaxSize" : "2",
-                "peerGrpMinSize" : "2",
+                "peerGrpMinSize" : "1",
                 "peerGrpMaxSize" : "2"
             },
             "loadtest" : {
@@ -102,7 +108,7 @@
                 "peerInstanceType" : "m1.large",
                 "transGrpMinSize" : "0",
                 "transGrpMaxSize" : "2",
-                "peerGrpMinSize" : "2",
+                "peerGrpMinSize" : "1",
                 "peerGrpMaxSize" : "2"
             },
             "qa" : {
@@ -112,7 +118,7 @@
                 "peerInstanceType" : "m1.small",
                 "transGrpMinSize" : "0",
                 "transGrpMaxSize" : "2",
-                "peerGrpMinSize" : "2",
+                "peerGrpMinSize" : "1",
                 "peerGrpMaxSize" : "2"
             },
             "production" : {
@@ -456,6 +462,7 @@
                 "AvailabilityZones" : { "Fn::GetAZs" : "" },
                 "LaunchConfigurationName" : { "Ref" : "TransactorLaunchConfig" },
                 "MinSize" : { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "transGrpMinSize" ] },
+                "DesiredCapacity" : { "Ref" : "NumTransactors" },
                 "MaxSize" : { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "transGrpMaxSize" ] },
                 "Tags" : [{ "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "AWS::StackName" }, "transactor" ] ]}, "PropagateAtLaunch" : "true" },
                           { "Key" : "Stage", "Value" : { "Ref" : "Stage" }, "PropagateAtLaunch" : "true" }]
