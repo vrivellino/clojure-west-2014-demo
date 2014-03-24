@@ -98,7 +98,7 @@
                 "peerInstanceType" : "m1.small",
                 "transGrpMinSize" : "0",
                 "transGrpMaxSize" : "2",
-                "peerGrpMinSize" : "2",
+                "peerGrpMinSize" : "1",
                 "peerGrpMaxSize" : "2"
             },
             "loadtest" : {
@@ -108,7 +108,7 @@
                 "peerInstanceType" : "m1.large",
                 "transGrpMinSize" : "0",
                 "transGrpMaxSize" : "2",
-                "peerGrpMinSize" : "2",
+                "peerGrpMinSize" : "1",
                 "peerGrpMaxSize" : "2"
             },
             "qa" : {
@@ -118,7 +118,7 @@
                 "peerInstanceType" : "m1.small",
                 "transGrpMinSize" : "0",
                 "transGrpMaxSize" : "2",
-                "peerGrpMinSize" : "2",
+                "peerGrpMinSize" : "1",
                 "peerGrpMaxSize" : "2"
             },
             "production" : {
