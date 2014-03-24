@@ -37,7 +37,7 @@
    schema. Presence of this datom indicates that the corresponding
    schema is present in the database and need not be reasserted."]]
 
- [[:user/part :clj-west/messages "Partition for storing our txs."]]
+ [[:user/part :clj-west.part/messages "Partition for storing our txs."]]
 
  [[:user/attr :clj-west.messages/id :long
    {:db/unique :db.unique/identity}

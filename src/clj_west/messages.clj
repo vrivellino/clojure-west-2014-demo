@@ -14,7 +14,7 @@
 (defn message-txdata
   [eid k v]
   (if (= :id k)
-    [[:db/add eid :clj-west.messages/id v]]
+    [[:db/add eid :clj-west.messages/id (Long/parseLong v)]]
     [[:db/add eid :clj-west.messages/msg v]]))
 
 (defn message->txdata
@@ -48,7 +48,7 @@
 (defn query
   [db request]
   (when db
-    (let [id (:id (:params request))]
+    (let [id (-> request :params :id Long/parseLong)]
       (->> (d/q '[:find ?e
                   :in $ ?attr ?id
                   :where
