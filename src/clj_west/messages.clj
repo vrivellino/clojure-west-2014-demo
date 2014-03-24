@@ -13,7 +13,9 @@
 
 (defn message-txdata
   [eid k v]
-  [[:db/add eid k v]])
+  (if (= :id k)
+    [[:db/add eid :clj-west.messages/id v]]
+    [[:db/add eid :clj-west.messages/msg v]]))
 
 (defn message->txdata
   [message]
@@ -46,14 +48,18 @@
      (-> result :db-after d/basis-t))))
 
 (defn query
-  [db attr id]
-  (->> (d/q '[:find ?e
-              :in $ ?attr ?id
-              :where
-              [?e ?attr ?id]]
-            db
-            attr
-            id)
-       ffirst
-       (d/entity db)
-       (ent->message)))
+  [db request]
+  (when db
+    (println request)
+    (let [id (get (:params request) "id")]
+      (->> (d/q '[:find ?e
+                  :in $ ?attr ?id
+                  :where
+                  [?e ?attr ?id]]
+                db
+                :clj-west.messages/id
+                id)
+           ffirst
+           (d/entity db)
+           (ent->message)
+           :clj-west.messages/msg))))
