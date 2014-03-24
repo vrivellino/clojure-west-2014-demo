@@ -17,7 +17,7 @@
 
 (defn- write-endpoint
   [request]
-  (m/transact (datomic-conn) request))
+  (str (m/transact (datomic-conn) request)))
 
 (defn- read-endpoint
   [request]
