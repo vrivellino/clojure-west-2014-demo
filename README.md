@@ -3,7 +3,9 @@ clojure-west-2014-demo
 
 Simple Web Service that saves messages to Datomic.
 
-_Note: the web app is currently a work-in-progress._
+_Note: the web app is currently a work-in-progress._ Right now, it runs locally
+but fails to initialize under Tomcat when deployed via a war file. Hope to have
+it fixed up in a few days.
 
 ## Overview
 
