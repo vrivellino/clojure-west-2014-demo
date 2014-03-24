@@ -20,11 +20,9 @@
 (defn message->txdata
   [message]
   (let [eid (d/tempid :clj-west.part/messages)]
-    (->> message
-         (reduce-kv (fn [msg-txdata k v]
-                      (into msg-txdata (message-txdata eid k v)))
-                    [])
-         (remove nil?))))
+    (reduce-kv (fn [msg-txdata k v]
+                 (into msg-txdata (message-txdata eid k v)))
+               [] message)))
 
 
 
@@ -50,8 +48,7 @@
 (defn query
   [db request]
   (when db
-    (println request)
-    (let [id (get (:params request) "id")]
+    (let [id (:id (:params request))]
       (->> (d/q '[:find ?e
                   :in $ ?attr ?id
                   :where

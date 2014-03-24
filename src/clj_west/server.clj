@@ -17,7 +17,7 @@
 
 (defn- write-endpoint
   [request]
-  (str (m/transact (datomic-conn) request)))
+  (m/transact (datomic-conn) request))
 
 (defn- read-endpoint
   [request]
@@ -45,7 +45,7 @@
 (defn app
   [options]
   (-> app-routes
-      ring.middleware.params/wrap-params
       ring.middleware.keyword-params/wrap-keyword-params
+      ring.middleware.params/wrap-params
       wrap-db-uri
       (dynamic-app-context options)))
