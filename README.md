@@ -21,7 +21,7 @@ $ curl 'http://localhost:3001/read?id=1'
 
 This project provides a reference implementation of deploying Datomic in AWS as
 a follow-up to my presentation at Clojure/West 2014:
-_DevOps Done Right: Room Key's Datomic Deployment in AWS_
+[DevOps Done Right: Room Key's Datomic Deployment in AWS](https://www.youtube.com/watch?v=vFX6T5oQC7Y)
 
 ### CloudFormation Template
 
