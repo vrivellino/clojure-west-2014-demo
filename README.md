@@ -52,7 +52,7 @@ leiningen when it tries to download the Datomic peer library from Cognitect's
 maven repo (see project.clj). These are the credentials assigned to your
 Datomic account after registering for a license key.
 
-AWS_ACCESS_KEY_ID and AWS_SECRET_KEY aren't explicitly used by this project,
+AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY aren't explicitly used by this project,
 but other AWS tools and libraries look for them, so they're useful to have set.
 
 For example, add the following to your ~/.bashrc
@@ -62,7 +62,7 @@ export MY_DATOMIC_USERNAME=username@demo.domain
 export MY_DATOMIC_PASSWORD=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 
 export AWS_ACCESS_KEY_ID=AKI...
-export AWS_SECRET_KEY=<SECRET>
+export AWS_SECRET_ACCESS_KEY=<SECRET>
 ```
 
 ### Configure AWS CLI Tools
