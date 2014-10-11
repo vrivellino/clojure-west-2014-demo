@@ -357,13 +357,13 @@
                     "config" : {
                         "files" : {
                             "/tmp/jdk.rpm" : {
-                                "source" : { "Fn::Join" : [ "", [ "https://s3.amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "JdkRpm" } ] ]},
+                                "source" : { "Fn::Join" : [ "", [ "https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "JdkRpm" } ] ]},
                                 "mode" : "000644",
                                 "owner" : "root",
                                 "group" : "root"
                             },
                             "/tmp/datomic-license-key" : {
-                                "source" : { "Fn::Join" : [ "", [ "https://s3.amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "LicenseFile" } ] ]},
+                                "source" : { "Fn::Join" : [ "", [ "https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "LicenseFile" } ] ]},
                                 "mode" : "000600",
                                 "owner" : "root",
                                 "group" : "root"
