@@ -525,7 +525,7 @@
                         },
                         "files" : {
                             "/var/lib/tomcat7/webapps/ROOT.war" : {
-                                "source" : { "Fn::Join" : [ "", [ "https://s3.amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "WarFile" } ] ]},
+                                "source" : { "Fn::Join" : [ "", [ "https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "WarFile" } ] ]},
                                 "mode" : "000644",
                                 "owner" : "tomcat",
                                 "group" : "tomcat"
