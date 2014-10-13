@@ -47,12 +47,12 @@ Datomic deployment in Amazon Web Services.
 ### Setup Environment
 
 First setup environment variables in your shell profile. Tools in the scripts
-directory will look for MY_DATOMIC_USERNAME and MY_DATOMIC_USERNAME, as will
+directory will look for `MY_DATOMIC_USERNAME` and `MY_DATOMIC_PASSWORD`, as will
 leiningen when it tries to download the Datomic peer library from Cognitect's
 maven repo (see project.clj). These are the credentials assigned to your
 Datomic account after registering for a license key.
 
-AWS_ACCESS_KEY_ID and AWS_SECRET_KEY aren't explicitly used by this project,
+`AWS_ACCESS_KEY_ID` and `AWS_SECRET_KEY` aren't explicitly used by this project,
 but other AWS tools and libraries look for them, so they're useful to have set.
 
 For example, add the following to your ~/.bashrc
