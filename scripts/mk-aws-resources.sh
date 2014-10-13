@@ -15,7 +15,7 @@ if [ -z "$MY_DATOMIC_USERNAME" -o -z "$MY_DATOMIC_PASSWORD" ]; then
 fi
 
 if [ -z "$1" -o -z "$2" ]; then
-	echo "Usage: `basename $0` <path/to/jdk-7u51-linux-x64.rpm> <path/to/datomic-license-key>" >&2
+	echo "Usage: `basename $0` <path/to/jdk-7u67-linux-x64.rpm> <path/to/datomic-license-key>" >&2
 	exit 1
 fi
 
