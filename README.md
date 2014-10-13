@@ -16,7 +16,7 @@ Datomic, and reads from Datomic for queries to the /read endpoint.
 $ curl 'http://localhost:3001/write?id=1&msg=HelloWorld'
 1006
 $ curl 'http://localhost:3001/read?id=1'
-# TODO: Need read example output
+HelloWorld
 ```
 
 This project provides a reference implementation of deploying Datomic in AWS as
@@ -178,7 +178,7 @@ Once the transactor is online, you can run lein ring server
 lein ring server-headless
 ```
 
-TODO: Add write & query examples
+For write & query examples, see [Overview](#overview).
 
 
 ## Deploying to AWS
