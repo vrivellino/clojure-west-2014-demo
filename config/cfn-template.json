@@ -81,21 +81,24 @@
     "Mappings": {
         "config" : {
             "us-east-1" : {
-                "ami" : "ami-bba18dd2"
+                "ami" : "ami-08842d60"
             },
             "us-west-1" : {
-                "ami" : "ami-a43909e1"
+                "ami" : "ami-cfa8a18a"
             },
             "us-west-2" : {
-                "ami" : "ami-ccf297fc"
+                "ami" : "ami-8786c6b7"
+            },
+            "eu-west-1" : {
+                "ami" : "ami-748e2903"
             }
         },
         "stage" : {
             "staging" : {
                 "peersecgrp" : "datomic-demo-peer-staging",
                 "ddbTable" : "datomic_demo_staging",
-                "transactorInstanceType" : "m1.small",
-                "peerInstanceType" : "m1.small",
+                "transactorInstanceType" : "t2.small",
+                "peerInstanceType" : "t2.small",
                 "transGrpMinSize" : "0",
                 "transGrpMaxSize" : "2",
                 "peerGrpMinSize" : "1",
@@ -104,8 +107,8 @@
             "loadtest" : {
                 "peersecgrp" : "datomic-demo-peer-loadtest",
                 "ddbTable" : "datomic_demo_loadtest",
-                "transactorInstanceType" : "m1.large",
-                "peerInstanceType" : "m1.large",
+                "transactorInstanceType" : "m3.large",
+                "peerInstanceType" : "m3.large",
                 "transGrpMinSize" : "0",
                 "transGrpMaxSize" : "2",
                 "peerGrpMinSize" : "1",
@@ -114,8 +117,8 @@
             "qa" : {
                 "peersecgrp" : "datomic-demo-peer-qa",
                 "ddbTable" : "datomic_demo_qa",
-                "transactorInstanceType" : "m1.small",
-                "peerInstanceType" : "m1.small",
+                "transactorInstanceType" : "t2.small",
+                "peerInstanceType" : "t2.small",
                 "transGrpMinSize" : "0",
                 "transGrpMaxSize" : "2",
                 "peerGrpMinSize" : "1",
@@ -124,8 +127,8 @@
             "production" : {
                 "peersecgrp" : "datomic-demo-peer-loadtest",
                 "ddbTable" : "datomic_demo_loadtest",
-                "transactorInstanceType" : "m1.large",
-                "peerInstanceType" : "m1.large",
+                "transactorInstanceType" : "m3.large",
+                "peerInstanceType" : "m3.large",
                 "transGrpMinSize" : "0",
                 "transGrpMaxSize" : "2",
                 "peerGrpMinSize" : "2",
@@ -137,8 +140,8 @@
                 "elbhealthcheck" : "HTTP:8080/health-check",
                 "JavaOpts" : "-server -XX:NewRatio=5 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -Dcom.sun.management.jmxremote"
             },
-            "m1.small": { "Xms" : "256m", "Xmx" : "1280m", "MaxPermSize" : "128m" },
-            "m1.large": { "Xms" : "512m", "Xmx" : "6656m", "MaxPermSize" : "512m" }
+            "t2.small": { "Xms" : "256m", "Xmx" : "1620m", "MaxPermSize" : "128m" },
+            "m3.large": { "Xms" : "512m", "Xmx" : "6000m", "MaxPermSize" : "512m" }
         },
 
         "transactorConfig": {
@@ -146,12 +149,12 @@
                 "JavaOpts" : "'-XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly'"
             },
 
-            "m1.small": {
-                "Xmx" : "1190m",
+            "t2.small": {
+                "Xmx" : "1500m",
                 "transSettings" : "memory-index-threshold=32m\nmemory-index-max=64m\nobject-cache-max=96m\n",
                 "memIndexMbAlarmThresh" : "72"
             },
-            "m1.large": {
+            "m3.large": {
                 "Xmx" : "5250m",
                 "transSettings" : "memory-index-threshold=256m\nmemory-index-max=512m\nobject-cache-max=768\n",
                 "memIndexMbAlarmThresh" : "384"
