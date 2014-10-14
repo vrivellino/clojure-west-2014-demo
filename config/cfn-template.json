@@ -151,12 +151,12 @@
 
             "t2.small": {
                 "Xmx" : "1500m",
-                "transSettings" : "memory-index-threshold=32m\nmemory-index-max=64m\nobject-cache-max=96m\n",
-                "memIndexMbAlarmThresh" : "72"
+                "transSettings" : "memory-index-threshold=32m\nmemory-index-max=512m\nobject-cache-max=96m\n",
+                "memIndexMbAlarmThresh" : "384"
             },
             "m3.large": {
                 "Xmx" : "5250m",
-                "transSettings" : "memory-index-threshold=256m\nmemory-index-max=512m\nobject-cache-max=768\n",
+                "transSettings" : "memory-index-threshold=32m\nmemory-index-max=512m\nobject-cache-max=768\n",
                 "memIndexMbAlarmThresh" : "384"
             }
         }
