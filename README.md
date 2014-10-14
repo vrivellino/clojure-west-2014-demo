@@ -16,7 +16,7 @@ Datomic, and reads from Datomic for queries to the /read endpoint.
 $ curl 'http://localhost:3001/write?id=1&msg=HelloWorld'
 1006
 $ curl 'http://localhost:3001/read?id=1'
-# TODO: Need read example output
+HelloWorld
 ```
 
 This project provides a reference implementation of deploying Datomic in AWS as
@@ -40,19 +40,19 @@ Datomic deployment in Amazon Web Services.
 * [Datomic Pro Starter](http://www.datomic.com/get-datomic.html) license and credentials
 * [leiningen](https://github.com/technomancy/leiningen)
 * [AWS CLI tools](http://aws.amazon.com/cli/)
-* Java7 JDK Linux RPM downloaded from Oracle ([jdk-7u51-linux-x64.rpm](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html))
+* Java7 JDK Linux RPM downloaded from Oracle ([jdk-7u67-linux-x64.rpm](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html))
 
 ## Getting Started
 
 ### Setup Environment
 
 First setup environment variables in your shell profile. Tools in the scripts
-directory will look for MY_DATOMIC_USERNAME and MY_DATOMIC_USERNAME, as will
+directory will look for `MY_DATOMIC_USERNAME` and `MY_DATOMIC_PASSWORD`, as will
 leiningen when it tries to download the Datomic peer library from Cognitect's
 maven repo (see project.clj). These are the credentials assigned to your
 Datomic account after registering for a license key.
 
-AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY aren't explicitly used by this project,
+`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` aren't explicitly used by this project,
 but other AWS tools and libraries look for them, so they're useful to have set.
 
 For example, add the following to your ~/.bashrc
@@ -118,7 +118,7 @@ Cognitect recommends that production Datomic transactors run using the JRE from
 Oracle. In fact, the official transactor AMI they build includes the Oracle JDK.
 
 Go to [Oracle.com](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html)
-and download the Linux 64-bit Java7 JDK RPM (jdk-7u51-linux-x64.rpm). 
+and download the Linux 64-bit Java7 JDK RPM (jdk-7u67-linux-x64.rpm). 
 
 Keep this handy, the script that creates resources in AWS will upload it to S3.
 
@@ -157,14 +157,14 @@ license key file, as arguments.
 For example:
 
 ```sh
-./scripts/transactor.sh ~/datomic-pro-0.9.4609 ~/download/datomic-license-key
+./scripts/transactor.sh ~/datomic-pro-0.9.4956 ~/download/datomic-license-key
 ```
 
 The output should look something like this:
 
 ```sh
 Creating dev-transactor.propertie ...
-Executing: /home/var/datomic-pro-0.9.4609/bin/transactor dev-transactor.properties
+Executing: /home/var/datomic-pro-0.9.4956/bin/transactor dev-transactor.properties
 Launching with Java options -server -Xms1g -Xmx1g -XX:NewRatio=4 -XX:SurvivorRatio=8 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:CMSInitiatingOccupancyFraction=60 -XX:+UseCMSInitiatingOccupancyOnly -XX:+CMSScavengeBeforeRemark
 Starting datomic:dev://localhost:4334/<DB-NAME>, storing data in: data ...
 System started datomic:dev://localhost:4334/<DB-NAME>, storing data in: data
@@ -178,7 +178,7 @@ Once the transactor is online, you can run lein ring server
 lein ring server-headless
 ```
 
-TODO: Add write & query examples
+For write & query examples, see [Overview](#overview).
 
 
 ## Deploying to AWS
@@ -201,7 +201,7 @@ Run scripts/mk-aws-resources.sh, supplying it with the path to the JDK RPM, as
 well as the path to the license key file you created.
 
 ```sh
-./scripts/mk-aws-resources.sh ~/download/jdk-7u51-linux-x64.rpm ~/download/datomic-license-key
+./scripts/mk-aws-resources.sh ~/download/jdk-7u67-linux-x64.rpm ~/download/datomic-license-key
 ```
 
 It will prompt for S3 bucket names (it generates defaults), as well as an EC2

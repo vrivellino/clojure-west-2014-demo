@@ -546,7 +546,7 @@
                                                { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "peerInstanceType" ] },
                                                "MaxPermSize" ] }, 
                                     " -DDATOMIC_URI=datomic:ddb://", { "Ref" : "AWS::Region" },
-                                      "/", { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "ddbTable" ] }, "/",
+                                      "/", { "Fn::FindInMap" : [ "stage", { "Ref" : "Stage" }, "ddbTable" ] }, "/clj-west",
                                     "\"\n"
                                 ] ]}
                             }

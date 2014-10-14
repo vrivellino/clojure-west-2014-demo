@@ -5,10 +5,18 @@ if [ -z "$1" -o -z "$2" ]; then
 	exit 1
 fi
 
-set -e
 . `dirname $0`/.demo.env
 
-warfile=uberwars/`basename $1 .war`-`stat -c %Y $1`.war
+# BSD stat has other flags
+stat="stat -c %Y"
+stat -c %Y $file > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+        stat="stat -f %m"
+fi
+
+set -e
+
+warfile=uberwars/`basename $1 .war`-$($stat $1).war
 # Uploaded war file will have modifcation ts embedded in its name
 aws s3 cp "$1" "s3://$SRCBUCKET/$warfile"
 
