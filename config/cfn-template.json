@@ -164,8 +164,7 @@
 
     "Conditions" : {
         "IsProd" : { "Fn::Equals" : [ { "Ref" : "Stage" }, "production" ] },
-        "NoSshKey" : { "Fn::Equals" : [ { "Ref" : "SshKey" }, "none" ] },
-        "S3DefaultEndpoint" : { "Fn::Or" : [ { "Fn::Equals" : [ { "Ref" : "AWS::Region" }, "us-east-1" ] }, { "Fn::Equals" : [ { "Ref" : "AWS::Region" }, "us-west-2" ] } ]}
+        "NoSshKey" : { "Fn::Equals" : [ { "Ref" : "SshKey" }, "none" ] }
     },
 
     "Resources" : {
@@ -361,19 +360,13 @@
                     "config" : {
                         "files" : {
                             "/tmp/jdk.rpm" : {
-                                "source" : { "Fn::If": [ "S3DefaultEndpoint",
-                                    { "Fn::Join" : [ "", [ "https://s3.amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "JdkRpm" } ] ]},
-                                    { "Fn::Join" : [ "", [ "https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "JdkRpm" } ] ]}
-                                ]},
+                                "source" : { "Fn::Join" : [ "", [ "https://", { "Ref" : "SrcBucket" }, ".s3.amazonaws.com/", { "Ref" : "JdkRpm" } ] ]},
                                 "mode" : "000644",
                                 "owner" : "root",
                                 "group" : "root"
                             },
                             "/tmp/datomic-license-key" : {
-                                "source" : { "Fn::If": [ "S3DefaultEndpoint",
-                                    { "Fn::Join" : [ "", [ "https://s3.amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "LicenseFile" } ] ]},
-                                    { "Fn::Join" : [ "", [ "https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "LicenseFile" } ] ]}
-                                ]},
+                                "source" : { "Fn::Join" : [ "", [ "https://", { "Ref" : "SrcBucket" }, ".s3.amazonaws.com/", { "Ref" : "LicenseFile" } ] ]},
                                 "mode" : "000600",
                                 "owner" : "root",
                                 "group" : "root"
@@ -535,10 +528,7 @@
                         },
                         "files" : {
                             "/var/lib/tomcat7/webapps/ROOT.war" : {
-                                "source" : { "Fn::If": [ "S3DefaultEndpoint",
-                                    { "Fn::Join" : [ "", [ "https://s3.amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "WarFile" } ] ]},
-                                    { "Fn::Join" : [ "", [ "https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "SrcBucket" }, "/", { "Ref" : "WarFile" } ] ]}
-                                ]},
+                                "source" : { "Fn::Join" : [ "", [ "https://", { "Ref" : "SrcBucket" }, ".s3.amazonaws.com/", { "Ref" : "WarFile" } ] ]},
                                 "mode" : "000644",
                                 "owner" : "tomcat",
                                 "group" : "tomcat"
